@@ -1,0 +1,30 @@
+{
+  "vggface2/original": {
+    "top1": 50.65,
+    "top3": 62.46,
+    "top5": 67.57,
+    "mrr": 0.581,
+    "no_face_fallbacks": null
+  },
+  "vggface2/mtcnn": {
+    "top1": 93.29,
+    "top3": 94.79,
+    "top5": 95.1,
+    "mrr": 0.9408,
+    "no_face_fallbacks": 1
+  },
+  "casia-webface/original": {
+    "top1": 9.31,
+    "top3": 13.71,
+    "top5": 16.32,
+    "mrr": 0.1296,
+    "no_face_fallbacks": null
+  },
+  "casia-webface/mtcnn": {
+    "top1": 90.89,
+    "top3": 92.99,
+    "top5": 93.99,
+    "mrr": 0.922,
+    "no_face_fallbacks": 1
+  }
+}

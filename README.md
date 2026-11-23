@@ -4,22 +4,30 @@ A face identification service. It embeds face images with pretrained FaceNet mod
 
 ## Results
 
+The biggest gain came from fixing the input to the embedding model. FaceNet was trained on tightly cropped faces scaled with its own standardization, but the original pipeline resized the whole photo and applied ImageNet normalization. Detecting and cropping the face with MTCNN and using FaceNet's standardization raised accuracy for both pretrained models, measured on the same 999 probes against a 2,265 image gallery with exact cosine search.
+
+| Pretrained weights | Preprocessing | Top 1 | Top 3 | MRR |
+|---|---|---|---|---|
+| VGGFace2 | Original (whole image, ImageNet normalization) | 50.65% | 62.46% | 0.581 |
+| VGGFace2 | **MTCNN face crop, FaceNet standardization** | **93.29%** | **94.79%** | **0.941** |
+| CASIA-WebFace | Original | 9.31% | 13.71% | 0.130 |
+| CASIA-WebFace | **MTCNN face crop, FaceNet standardization** | **90.89%** | **92.99%** | **0.922** |
+
+The large gap between the two models in the original case studies came mostly from the preprocessing. With the correct input, both perform well and VGGFace2 leads by about two points. [scripts/compare_preprocessing.py](ironclad/scripts/compare_preprocessing.py) reproduces the table.
+
+These findings from the case studies hold regardless of preprocessing.
+
 | Finding | Result |
 |---|---|
-| Embedding model | FaceNet pretrained on VGGFace2 reached 50.65 percent top 1 accuracy, against 9.31 percent for the CASIA-WebFace version |
-| Index type | HNSW matched brute force search almost exactly (61.76 versus 61.96 percent top 3), while LSH fell to 46.35 percent |
+| Index type | HNSW matched brute force search almost exactly, while LSH lost substantial accuracy |
 | Distance metric | Cosine and Euclidean distance gave identical results in every brute force and HNSW test |
-| Gallery size | Raising the images per identity from one to three lifted VGGFace2 top 3 accuracy from 58.26 to 62.86 percent, with little gain beyond that |
+| Gallery size | More images per identity improved accuracy, with most of the gain by three images |
 
-The first [case study](ironclad/CaseStudy.md) also tests robustness to Gaussian noise, resizing, and brightness changes and chooses the number of candidates to return. The [second](ironclad/CaseStudy_2.md) adds MRR, mAP, and recall at K, and compares gallery sizes and index types.
-
-<p align="center">
-  <img src="ironclad/external_plots_m/Task%203%20-%20Plot%201.png" width="600"/>
-</p>
+The [case studies](ironclad/CaseStudy.md) were run with the original preprocessing, so their absolute accuracies are lower than the table above. The [second](ironclad/CaseStudy_2.md) adds MRR, mAP, and recall at K and compares gallery sizes and index types.
 
 ## How it works
 
-1. **Preprocessing.** Images are resized and normalized for the embedding model.
+1. **Preprocessing.** MTCNN detects and crops the face to 160 by 160 pixels and applies FaceNet's fixed standardization, with a centre crop fallback when no face is found.
 2. **Embedding.** `Embedding` wraps FaceNet (InceptionResnetV1 from facenet-pytorch) to produce 512 dimensional vectors.
 3. **Indexing.** Brute force, HNSW, and LSH FAISS indexes store the gallery embeddings.
 4. **Search.** `FaissSearch` returns the top K identities by cosine or Euclidean distance.
