@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+# Face image galleries and probes are not redistributed.
+ironclad/storage/
